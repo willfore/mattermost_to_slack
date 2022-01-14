@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.3.0
+	github.com/tushar2708/altcsv v0.0.0-20190930232535-20830d2e2c68
 )
 
 require (

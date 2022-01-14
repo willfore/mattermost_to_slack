@@ -4,18 +4,22 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
+	"time"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"github.com/tushar2708/altcsv"
 	"github.com/willfore/mattermost_to_slack/types"
 )
 
 func GetUsers() *cobra.Command {
+	now := time.Now()
 	var command = &cobra.Command{
 		Use:          "get_users",
-		Short:        "Print the found users",
-		Long:         "Print the found users from specified json export",
+		Short:        "Print the found users and write to CSV file",
+		Long:         "Print the found users from specified json export and write to CSV file for import into slack",
 		Example:      ` mm2slack get_users --export-file <path_to_file>`,
 		SilenceUsage: false,
 	}
@@ -56,22 +60,25 @@ func GetUsers() *cobra.Command {
 			}
 		}
 		fmt.Println("Found", len(Users), "users")
-		prompt := promptui.Select{
-			Label: "Do you want to create these slack uers?",
-			Items: []string{"Yes", "No"},
-		}
-		_, result, err := prompt.Run()
+		fmt.Println("These Users will have to be imported via CSV. Now creating CSV file")
+
+		csvFile, err := os.Create("users.csv")
 		if err != nil {
-			fmt.Printf("Prompt failed %v\n", err)
-			return err
+			log.Fatalf("failed creating csv file: %s", err)
 		}
-		if result == "Yes" {
-			for _, user := range Users {
-				fmt.Println(user.User.Username)
-			}
+		defer csvFile.Close()
+		csvWriter := altcsv.NewWriter(csvFile)
+		csvWriter.AllQuotes = true
+
+		for _, user := range Users {
+			time := strconv.FormatInt(int64(now.UnixMilli()), 10)
+			csvWriter.Write([]string{time, "random", user.User.Username, "Adding a user"})
+			fmt.Printf("Adding user %s\n", user.User.Username)
 		}
+		csvWriter.Flush()
+		fmt.Println("Done creating CSV file")
 		return nil
 	}
-
+	// here we will need to call a func to do authentication, check users and create them if needed. Need to ask what type of user we want to create.
 	return command
 }

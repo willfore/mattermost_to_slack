@@ -21,6 +21,7 @@ func main() {
 	rootCmd.AddCommand(cmd.MakeVersion())
 	rootCmd.AddCommand(cmd.MakeAuth())
 	rootCmd.AddCommand(cmd.GetUsers())
+	rootCmd.AddCommand(cmd.GetChannels())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
