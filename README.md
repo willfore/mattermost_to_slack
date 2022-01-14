@@ -1,4 +1,4 @@
-# mattermost to slack
+# Mattermost to Slack
 
 This is a command line utility to take a bulk.json export from Mattermost and give you multiple import options into slack via the API. Some things to take note of:
 
@@ -10,10 +10,13 @@ This is a command line utility to take a bulk.json export from Mattermost and gi
 # Usage
 
 `mm2slack -h`
+
 This will give you help instructions of all commands available
 
 `mm2slack set_auth --auth-token <token>`
+
 Run this first and provide your bearer token.
 
 `mm2slack get_users --export-file <path_to_file>`
+
 Run this to grab all of your users and create a CSV file to be imported into slack
