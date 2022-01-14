@@ -20,3 +20,11 @@ Run this first and provide your bearer token.
 `mm2slack get_users --export-file <path_to_file>`
 
 Run this to grab all of your users and create a CSV file to be imported into slack
+
+`mm2slack get_channels --export-file <path_to_file> --team-name <my-team-name>`
+
+Since the export uses all team names. Please specify your team name when importing channels
+
+# Contributing
+
+Feel free to submit a pull request to improve this. As of writing there are literally no other options out there I could find.
