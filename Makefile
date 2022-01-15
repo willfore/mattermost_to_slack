@@ -1,3 +1,5 @@
+shell chmod +x ./hack/platforms.sh
+shell chmod +x ./hack/get_hash.sh
 Version := $(shell git describe --tags --dirty)
 GitCommit := $(shell git rev-parse HEAD)
 LDFLAGS := "-s -w -X github.com/willfore/mattermost_to_slack/cmd.Version=$(Version) -X github.com/willfore/mattermost_to_slack/cmd.GitCommit=$(GitCommit)"
