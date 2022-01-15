@@ -21,7 +21,9 @@ func GetChannels() *cobra.Command {
 	}
 
 	command.Flags().String("export-file", "~/Downloads/bulk.json", "Provide the path to the export .json file")
+	command.MarkFlagRequired("export-file")
 	command.Flags().String("team-name", "my-team", "Provide the team name")
+	command.MarkFlagRequired("team-name")
 
 	command.PreRunE = func(command *cobra.Command, args []string) error {
 		_, err := command.Flags().GetString("export-file")
@@ -33,6 +35,7 @@ func GetChannels() *cobra.Command {
 		if teamErr != nil {
 			return fmt.Errorf("error with --team-name usage: %s", err)
 		}
+
 		return nil
 	}
 

@@ -1,8 +1,8 @@
 Version := $(shell git describe --tags --dirty)
 GitCommit := $(shell git rev-parse HEAD)
 LDFLAGS := "-s -w -X github.com/willfore/mattermost_to_slack/cmd.Version=$(Version) -X github.com/willfore/mattermost_to_slack/cmd.GitCommit=$(GitCommit)"
-PLATFORM := $(shell ./hack/platforms.sh)
-SOURCE_DIRS = cmd pkg main.go
+PLATFORM := $(shell hack/platforms.sh)
+SOURCE_DIRS = cmd main.go
 export GO111MODULE=on
 
 .PHONY: all

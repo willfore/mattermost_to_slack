@@ -25,12 +25,14 @@ func GetUsers() *cobra.Command {
 	}
 
 	command.Flags().String("export-file", "~/Downloads/bulk.json", "Provide the path to the export .json file")
+	command.MarkFlagRequired("export-file")
 
 	command.PreRunE = func(command *cobra.Command, args []string) error {
 		_, err := command.Flags().GetString("export-file")
 		if err != nil {
 			return fmt.Errorf("error with --export-file usage: %s", err)
 		}
+
 		return nil
 	}
 
