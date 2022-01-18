@@ -34,6 +34,8 @@ jobs:
           release_name: ${{ steps.vars.outputs.tag }}
           tag_name: ${{ steps.vars.outputs.tag }}
           body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Upload release binaries
         uses: alexellis/upload-assets@0.3.0
         env:
