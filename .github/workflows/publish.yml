@@ -16,12 +16,23 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 1
+      - name: Set Version
+        id: vars
+        run: echo ::set-output name=tag${GITHUB_REF#refs/*/}
       - name: Install Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
       - name: Make all
         run: make all
+      - name: Create Release
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.vars.outputs.tag }}
+          tag_name: ${{ steps.vars.outputs.tag }}
+          body_path: CHANGELOG.md
       - name: Upload release binaries
         uses: alexellis/upload-assets@0.3.0
         env:
