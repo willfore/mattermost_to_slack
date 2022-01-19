@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
+	"strconv"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -17,7 +19,7 @@ func GetPosts() *cobra.Command {
 		Use:          "get_posts",
 		Short:        "Print the found posts",
 		Long:         "Print the found posts from specified json export",
-		Example:      ` mm2slack get_posts --export-file <path_to_file> --team-name <team_name>`,
+		Example:      ` mm2slack get_posts --export-file <path_to_file> --team-name <team_name> --slack-team-id <team_id> --export-from <unix_timestamp_milliseconds>`,
 		SilenceUsage: false,
 	}
 
@@ -25,21 +27,17 @@ func GetPosts() *cobra.Command {
 	command.MarkFlagRequired("export-file")
 	command.Flags().String("team-name", "my-team", "Provide the team name")
 	command.MarkFlagRequired("team-name")
+	command.Flags().String("slack-team-id", "my_team_id", "Provide the team id")
+	command.MarkFlagRequired("slack-team-id")
+	command.Flags().String("export-from", "1642634522645", "Provide the unix timestamp of the earliest post to import")
+	command.MarkFlagRequired("export-from")
 
 	command.PreRunE = func(command *cobra.Command, args []string) error {
-		_, err := command.Flags().GetString("export-file")
-		if err != nil {
-			return fmt.Errorf("error with --export-file usage: %s", err)
-		}
-
-		_, teamErr := command.Flags().GetString("team-name")
-		if teamErr != nil {
-			return fmt.Errorf("error with --team-name usage: %s", err)
-		}
-
 		return nil
 	}
+
 	command.RunE = func(cmd *cobra.Command, args []string) error {
+		fmt.Println("This will take a while... Grab a coffee or something")
 		exportFile, _ := command.Flags().GetString("export-file")
 		jsonFile, err := os.Open(exportFile)
 		if err != nil {
@@ -72,25 +70,44 @@ func GetPosts() *cobra.Command {
 			return ChannelPosts[a].Post.CreateAt < ChannelPosts[b].Post.CreateAt
 		})
 
-		fmt.Println("Found", len(ChannelPosts), "channel posts")
-		prompt := promptui.Select{
-			Label: "Would you like to import these channel posts into slack?",
-			Items: []string{"Yes", "No"},
-		}
-
-		_, result, err := prompt.Run()
-
+		mmUsersFile, err := os.Open("mm_users.json")
 		if err != nil {
-			fmt.Printf("Prompt failed %v\n", err)
+			fmt.Errorf("could not open mm_users.json file %s", err)
 		}
+		var mmUsers types.Users
+		defer mmUsersFile.Close()
+		byteValue, _ := ioutil.ReadAll(mmUsersFile)
+		json.Unmarshal(byteValue, &mmUsers)
 
-		if result == "Yes" {
-			for _, channelPost := range ChannelPosts {
-				fmt.Printf("Adding Channel Post from: %s -> %s", channelPost.Post.User, channelPost.Post.Channel)
+		fmt.Println("Found", len(ChannelPosts), "channel posts")
+		var slackChannelPosts types.SlackChannelPosts
+		for _, channelPost := range ChannelPosts {
+			exportFrom, _ := command.Flags().GetString("export-from")
+			exportFromInt, _ := strconv.ParseInt(exportFrom, 10, 64)
+			if channelPost.Post.CreateAt >= exportFromInt {
+				result, slackID := FindPostUser(channelPost.Post.User, mmUsers)
+				teamId, _ := command.Flags().GetString("slack-team-id")
+				var slackChannelPost types.SlackChannelPost
+				os.Mkdir(dirName()+"/"+channelPost.Post.Channel, 0777)
+				slackChannelPost.Type = "message"
+				slackChannelPost.Text = channelPost.Post.Message
+				slackChannelPost.Ts = strconv.FormatInt(int64(channelPost.Post.CreateAt), 10)
+				slackChannelPost.Team = teamId
+				slackChannelPost.UserTeam = teamId
+				slackChannelPost.SourceTeam = teamId
+				if result {
+					slackChannelPost.User = slackID
+				}
+				slackChannelPosts = append(slackChannelPosts, slackChannelPost)
+				file, _ := json.MarshalIndent(slackChannelPosts, "", " ")
+				_ = ioutil.WriteFile(dirName()+"/"+channelPost.Post.Channel+"/posts.json", file, 0644)
+				fmt.Printf("Adding Channel Post from: %s -> %s\n", channelPost.Post.User, channelPost.Post.Channel)
+			} else {
+				fmt.Println("Skipping Channel Post from:", channelPost.Post.CreateAt)
 			}
-		} else {
-			fmt.Println("Exiting...")
 		}
+		fmt.Println("Done creating poasts.json file")
+
 		return nil
 	}
 	return command
@@ -170,4 +187,16 @@ func GetDirectPosts() *cobra.Command {
 		return nil
 	}
 	return command
+}
+
+func FindPostUser(username string, mmUsers types.Users) (result bool, slackUserID string) {
+	result = false
+	for _, user := range mmUsers {
+		if user.User.Username == username {
+			slackUserID = user.User.SlackID
+			result = true
+			break
+		}
+	}
+	return result, slackUserID
 }
