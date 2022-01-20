@@ -27,6 +27,7 @@ func main() {
 	rootCmd.AddCommand(cmd.GetUsers())
 	rootCmd.AddCommand(cmd.GetChannels())
 	rootCmd.AddCommand(cmd.GetPosts())
+	rootCmd.AddCommand(cmd.GetPostsCSV())
 	rootCmd.AddCommand(cmd.GetDirectPosts())
 	rootCmd.AddCommand(cmd.DoCleanup())
 

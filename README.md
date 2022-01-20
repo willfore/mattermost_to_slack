@@ -40,9 +40,17 @@ This will create the proper users.json file to be included in the import
 
 Since the export uses all team names. Please specify your team name when importing channels from mattermost as well as the team-id in slack. This will create both Private and Public Channels in slack. It will also match up the exsisting users membership to the channels exported
 
+## At this point you will need to export the posts as a CSV file and import them that way. The rest of this process is not currently working and Slack cannot answer why.
+
+`mm2slack csv_posts --export-file <path_to_file> --slack-team-id <slack_team_id> --team-name <team_name>`
+
+This will use the same process as below but will create csv files instead that you can import.
+
 `mm2slack get_posts --export-file <path_to_file> --team-name <team_name> --slack-team-id <slack_team_id>`
 
 This is the meat of the program. This pices goes through all the posts from mattermost and creates a folder with the channel name. Once this is done it creates a posts.json file and inserts all of the posts for that channel into the posts.json file
+
+Once everything above is complete you will need to compress the folder into a zip file. You can also run `mm2slack cleanup` to delete all files created by the program
 
 # Notes
 

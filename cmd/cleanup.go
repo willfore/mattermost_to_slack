@@ -20,6 +20,8 @@ func DoCleanup() *cobra.Command {
 		fmt.Println("Removing all files created by the program")
 		os.RemoveAll(dirName())
 		os.Remove("mm_users.json")
+		os.Remove(dirName() + ".zip")
+		os.RemoveAll("mm_export-*")
 		return nil
 	}
 	return command

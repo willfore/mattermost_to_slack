@@ -49,7 +49,7 @@ type SlackUsers []SlackUser
 type SlackUser struct {
 	ID       string `json:"id"`
 	TeamID   string `json:"team_id"`
-	Name     string `json:"username"`
+	Name     string `json:"name"`
 	Deleted  bool   `json:"deleted"`
 	Color    string `json:"color"`
 	RealName string `json:"real_name"`

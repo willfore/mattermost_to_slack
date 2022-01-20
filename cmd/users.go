@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -85,13 +86,23 @@ func GetUsers() *cobra.Command {
 			if result {
 				slackChannelMember.User.SlackID = slackUserID
 				slackChannelMember.User.Username = user.User.Username
+				slackChannelMember.User.Email = user.User.Email
 				slackChannelMember.User.Teams = user.User.Teams
 				SlackChannelMembers = append(SlackChannelMembers, slackChannelMember)
 			}
 			slackUser.Name = user.User.Username
+			slackUser.ID = slackUserID
 			slackUser.TeamID = command.Flag("slack-team-id").Value.String()
-			slackUser.RealName = user.User.FirstName + " " + user.User.LastName
-			slackUser.Profile.Email = user.User.Email
+			if user.User.FirstName == "" {
+				slackUser.RealName = user.User.Username
+			} else {
+				slackUser.RealName = user.User.FirstName + " " + user.User.LastName
+			}
+			if strings.HasSuffix(user.User.Email, "localhost") {
+				slackUser.Profile.Email = user.User.Username + "@mycompany.com"
+			} else {
+				slackUser.Profile.Email = user.User.Email
+			}
 			slackUser.Profile.FirstName = user.User.FirstName
 			slackUser.Profile.LastName = user.User.LastName
 			slackUser.IsAdmin = false

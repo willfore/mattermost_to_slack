@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/willfore/mattermost_to_slack/pkg"
 	"github.com/willfore/mattermost_to_slack/types"
 )
 
@@ -16,7 +18,7 @@ func GetChannels() *cobra.Command {
 		Use:          "get_channels",
 		Short:        "Print the found channels",
 		Long:         "Print the found channels from specified json export",
-		Example:      ` mm2slack get_channels --export-file <path_to_file> --team-name <team_name> --slack-team-id <slack_team_id>`,
+		Example:      ` mm2slack get_channels --export-file <path_to_file> --team-name <team_name> --slack-team-id <slack_team_id> --ignore-channels <comma_separated_channel_names>`,
 		SilenceUsage: false,
 	}
 
@@ -26,6 +28,7 @@ func GetChannels() *cobra.Command {
 	command.MarkFlagRequired("team-name")
 	command.Flags().String("slack-team-id", "", "Provide the slack team id")
 	command.MarkFlagRequired("slack-team-id")
+	command.Flags().StringSlice("ignore-channels", []string{"test-channel-1", "test-channel-2"}, "Provide the comma separated list of channel names to ignore")
 
 	command.PreRunE = func(command *cobra.Command, args []string) error {
 		_, err := command.Flags().GetString("export-file")
@@ -87,23 +90,29 @@ func GetChannels() *cobra.Command {
 		fmt.Println("Found", len(Channels), "channels")
 
 		var SlackChannels types.SlackChannels
+		ignoredChannels, _ := command.Flags().GetStringSlice("ignore-channels")
 		for _, channel := range Channels {
-			var slackChannel types.SlackChannel
-			result, slackUserIDs := matchChannels(channel.Channel.Name, mmUsers)
-			if result {
-				slackChannel.Members = append(slackChannel.Members, slackUserIDs...)
-			}
-			slackChannel.Name = channel.Channel.Name
-			if channel.Channel.Type == "O" {
-				slackChannel.IsPrivate = false
+			if !pkg.CheckIgnoredChannels(channel.Channel.Name, ignoredChannels) {
+				var slackChannel types.SlackChannel
+				result, slackUserIDs := matchChannels(channel.Channel.Name, mmUsers)
+				if result {
+					slackChannel.Members = append(slackChannel.Members, slackUserIDs...)
+				}
+				slackChannel.Name = channel.Channel.Name
+				slackChannel.ID = "C" + genID()
+				if channel.Channel.Type == "O" {
+					slackChannel.IsPrivate = false
+				} else {
+					slackChannel.IsPrivate = true
+				}
+				slackChannel.IsChannel = true
+				slackChannel.Topic.Value = channel.Channel.Header
+				slackChannel.Purpose.Value = channel.Channel.Purpose
+				fmt.Printf("Adding Channel: %s - %s\n", channel.Channel.Name, channel.Channel.Type)
+				SlackChannels = append(SlackChannels, slackChannel)
 			} else {
-				slackChannel.IsPrivate = true
+				fmt.Println("Ignoring Channel:", channel.Channel.Name)
 			}
-			slackChannel.IsChannel = true
-			slackChannel.Topic.Value = channel.Channel.Header
-			slackChannel.Purpose.Value = channel.Channel.Purpose
-			fmt.Printf("Adding Channel: %s - %s\n", channel.Channel.Name, channel.Channel.Type)
-			SlackChannels = append(SlackChannels, slackChannel)
 		}
 		file, _ := json.MarshalIndent(SlackChannels, "", " ")
 		_ = ioutil.WriteFile(dirName()+"/channels.json", file, 0644)
@@ -130,4 +139,13 @@ func matchChannels(channelName string, mmUsers types.Users) (result bool, slackU
 		}
 	}
 	return result, slackUserIDs
+}
+
+func genID() string {
+	var chars = []rune("123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, 10)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
 }
