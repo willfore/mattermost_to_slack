@@ -1,12 +1,13 @@
 # Mattermost to Slack
 
-This is a command line utility to take a bulk.json export from Mattermost and give you multiple import options into slack via the API. Some things to take note of:
+This is Open Source software and
+This is a command line utility to take a bulk.json export from Mattermost and give you multiple import options into slack with API assistance. Some things to take note of:
 
 * I was in a huge rush when I wrote this so it may break for you
 * No there are not tests, yes I was in that big of a hurry
 * You will need to have knowledge of mattermost command line as well as creating a slack app to run this
-* Users will need to be imported via CSV before anything else can be done
-
+* Currently the slack import option is breaking. Slack support was "unable" to help
+* Cannot import DM's into slack at this time
 # Setup
 
 Set an environment variable called SLACK_API_TOKEN
@@ -62,3 +63,6 @@ This project is far from perfect. As I said I needed to get this migration done 
 # Contributing
 
 Feel free to submit a pull request to improve this. As of writing there are literally no other options out there I could find.
+
+# Notices
+This is Open Source software and as such comes with no support, warranties or guarentees. Use at your own risk.
